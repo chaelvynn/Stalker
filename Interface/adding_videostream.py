@@ -20,6 +20,9 @@ class DroneController:
         # Label for displaying video stream
         self.cap_lbl = Label(self.root)
 
+        # Optimizing the video taking process
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
         # Create a button to send takeoff and land commands to the drone
         self.takeoff_land_button = Button(self.root, text="Takeoff/Land", command=lambda: None)
 
