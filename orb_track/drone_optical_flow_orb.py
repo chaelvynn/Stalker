@@ -8,7 +8,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 # Directory containing known faces
-FACE_DIR = "faces"
+FACE_DIR = "orb_track/faces"
 
 # Load known faces
 def load_known_faces(directory):
