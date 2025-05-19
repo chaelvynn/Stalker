@@ -78,7 +78,6 @@ class FaceTrackerApp:
             self.root.after(10, self.process_frame)
             return
 
-        # FPS calculation
         curr_tick = cv2.getTickCount()
         elapsed = (curr_tick - self.prev_tick) / cv2.getTickFrequency()
         self.curr_fps = 1.0 / elapsed if elapsed > 0 else 0
@@ -89,7 +88,6 @@ class FaceTrackerApp:
         rgb_frame = frame[:, :, ::-1]
 
         if self.is_tracking:
-            # Resize for faster face_recognition
             small_frame = cv2.resize(rgb_frame, (0, 0), fx=0.5, fy=0.5)
             face_locations = face_recognition.face_locations(small_frame)
             face_encodings = face_recognition.face_encodings(small_frame, face_locations)
