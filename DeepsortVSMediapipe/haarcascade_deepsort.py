@@ -110,7 +110,6 @@ class FaceTrackerApp:
 
 
                 else:
-                    # Sudah tervalidasi, masukkan semua bbox ke tracker
                     detections.append(([x, y, w, h], 0.8, 'face'))
 
         tracks = self.tracker.update_tracks(detections, frame=frame)
@@ -149,7 +148,6 @@ class FaceTrackerApp:
                         print(f"Moved {movement.strip()}")
                 self.prev_positions[track_id] = (x_center, y_center)
 
-            # Cek apakah validated_track_id masih aktif
             if self.validated_track_id is not None:
                 valid_ids = [track.track_id for track in tracks if track.is_confirmed()]
                 if self.validated_track_id not in valid_ids:
