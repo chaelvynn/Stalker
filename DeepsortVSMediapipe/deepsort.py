@@ -39,13 +39,11 @@ class FaceTrackerApp:
         self.cap_lbl = Label(self.root)
         self.cap_lbl.pack()
 
-        # Load webcam (ganti dengan drone stream jika perlu)
         self.video = cv2.VideoCapture(0)
 
-        # DeepSORT init
+        # DeepSORT
         self.tracker = DeepSort(max_age=5)
 
-        # Load face DB
         self.known_face_encodings, self.known_face_names = load_known_faces("faces")
         self.target_encoding = None
         self.selected_name = "Disable"
@@ -69,7 +67,6 @@ class FaceTrackerApp:
         self.tracking_total_time = 0.0
 
 
-        # Start frame update loop
         self.process_frame()
 
 
