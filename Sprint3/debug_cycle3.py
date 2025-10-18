@@ -1,5 +1,5 @@
 from tkinter import Tk, Label, Button, Frame, StringVar, OptionMenu
-import cv2, face_recognition, os, pygame
+import cv2, face_recognition, os, pygame, time
 from PIL import Image, ImageTk
 from djitellopy import tello
 from flight_commands import start_flying, stop_flying
@@ -27,7 +27,7 @@ def calculate_confidence(face_distance, face_match_threshold=0.6):
     if face_distance > face_match_threshold: #kalau ga mirip 0%
         linear_val = (1.0 - face_distance) / (0.1 - face_match_threshold)
         return max(0.0, min(1.0, linear_val)) * 100
-    else: #kalau mirip 100%
+    else: #kalau mirip 100%/
         linear_val = (1.0 - face_distance) / (face_match_threshold - 0.1)
         return max(0.0, min(1.0, linear_val)) * 100
 
@@ -91,9 +91,12 @@ class DroneController:
             self.joystick = pygame.joystick.Joystick(0)
             self.joystick.init()
             print("Joystick:", self.joystick.get_name())
+
+        self.joystick_running = True
         
         self.is_flying = False
         self.is_landing = False
+
 
         faces_dir = "faces" #directory
         self.known_face_encodings, self.known_face_names = load_known_faces(faces_dir)
@@ -146,13 +149,18 @@ class DroneController:
             return 0.0
         return (self.KNOWN_FACE_WIDTH * self.FOCAL_LENGTH) / face_width_pixels
     
+
     
     def joystick_control(self):
-        def scale_axis(value):
+        def scale_axis(value, deadzone = 0.1):
+            if abs(value) < deadzone:
+                return 0
             # Change joystick value from [-1, 1] to [-100, 100]
             return int(value * 100)
         
-        while True:
+        last_roll, last_pitch, last_throttle, last_yaw = 0, 0, 0, 0
+
+        while self.joystick_running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return
@@ -196,31 +204,50 @@ class DroneController:
             throttle = -scale_axis(self.joystick.get_axis(1))   # up/down (Y)
             yaw      = scale_axis(self.joystick.get_axis(0))    # yaw (turn left/ turn right)
 
+
+
             # Print commands
-            if self.is_flying:
+            if roll!= 0 or pitch !=0 or throttle != 0 or yaw != 0:
+
+                self.drone.send_rc_control(roll, pitch, throttle, yaw)
+                last_roll, last_pitch, last_throttle, last_yaw = roll, pitch, throttle, yaw
                 if roll != 0:
                     if roll > 0:
-                        print("Moving Right:", roll)
+                        # self.movement.append("[C]Move right")
+                        print("[C]Moving Right:", roll)
                     elif roll < 0:
-                        print("Moving Left:", roll)
+                        # self.movement.append("[C]Move left")
+                        print("[C]Moving Left:", roll)
                 if pitch != 0:
                     if pitch > 0:
-                        print("Moving Forward:", pitch)
+                        # self.movement.append("[C]Move forward")
+                        print("[C]Moving Forward:", pitch)
                     elif roll < 0:
-                        print("Moving Backward:", pitch)
+                        # self.movement.append("[C]Move backward")
+                        print("[C]Moving Backward:", pitch)
                 if throttle != 0:
                     if throttle > 0:
-                        print("Moving Up:", throttle)
+                        # self.movement.append("[C]Move upward")
+                        print("[C]Moving Up:", throttle)
                     elif throttle < 0:
-                        print("Moving Down:", throttle)
+                        # self.movement.append("[C]Move downward")
+                        print("[C]Moving Down:", throttle)
                 if yaw != 0:
                     if yaw > 0:
-                        print("Yaw Right:", yaw)
+                        # self.movement.append("[C]Yaw right")
+                        print("[C]Yaw Right:", yaw)
                     elif yaw < 0:
-                        print("Yaw Left:", yaw)
+                        # self.movement.append("[C]Yaw left")
+                        print("[C]Yaw Left:", yaw)
 
+            elif roll == pitch == throttle == yaw == 0 and (last_roll != 0 or last_pitch != 0 or last_throttle != 0 or last_yaw != 0):
+                self.drone.send_rc_control(0, 0, 0, 0)
+                last_roll, last_pitch, last_throttle, last_yaw = 0, 0, 0, 0
+                # print("Stopping movement")
 
-            self.drone.send_rc_control(roll, pitch, throttle, yaw)
+            time.sleep(0.1)
+            
+
 
     def run_app(self):
         try:
@@ -259,9 +286,7 @@ class DroneController:
             self.face_detection_menu.pack(side='left')
             self.button_frame.pack(anchor="center", pady=10)
             self.video_stream()
-
-            thread.Thread(target=self.joystick_control, daemon=True).start()
-
+ 
             self.root.mainloop()
 
            
@@ -295,6 +320,7 @@ class DroneController:
             nonlocal frame
             frame = self.cap.frame
             
+        
 
         def read_movement():
             if self.movement:
@@ -374,6 +400,13 @@ class DroneController:
 
             cur_gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             selected_name = self.face_detection_var.get()
+
+            thread.Thread(target=self.joystick_control, daemon=True).start()
+
+            if selected_name == "Disable":
+                self.joystick_running = True
+            else:
+                self.joystick_running = False
 
             if selected_name != self.current_name:
                 self.current_name = selected_name
