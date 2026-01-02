@@ -1,6 +1,6 @@
 import cv2
 import face_recognition
-import os
+import os, numpy as np
 from tkinter import *
 from deep_sort_realtime.deepsort_tracker import DeepSort
 import mediapipe as mp
@@ -218,9 +218,11 @@ class FaceTrackerApp:
                     cy = (t + b) / 2
 
                     if self.prev_bbox_center is not None:
-                        dx = abs(cx - self.prev_bbox_center[0])
-                        dy = abs(cy - self.prev_bbox_center[1])
-                        self.bbox_motion.append(dx + dy)
+                        # dx = abs(cx - self.prev_bbox_center[0])
+                        # dy = abs(cy - self.prev_bbox_center[1])
+                        dist = np.linalg.norm([cx - self.prev_bbox_center[0], cy - self.prev_bbox_center[1]]) #calculate euclidean distance
+                        
+                        self.bbox_motion.append(dist)
 
                     self.prev_bbox_center = (cx, cy)
 
