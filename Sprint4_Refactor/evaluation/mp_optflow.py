@@ -171,8 +171,6 @@ class WebcamController:
 
         if self.evaluation_active:
             self.fps_log.append(self.curr_fps)
-        # avg_fps = sum(self.fps_log) / len(self.fps_log)
-        # print(f"Current FPS: {self.curr_fps:.2f}, Average FPS: {avg_fps:.2f}")
 
 
         if self.prev_frame_gray is None:
@@ -287,9 +285,8 @@ class WebcamController:
                 if next_points is not None and len(next_points) > 0:
                     x, y = next_points[0].ravel()
                     if self.evaluation_active and self.prev_point is not None:
-                        dx = abs(x - self.prev_point[0])
-                        dy = abs(y - self.prev_point[1])
-                        self.point_motion.append(dx + dy)
+                        dist = np.linalg.norm([x - self.prev_point[0], y - self.prev_point[1]]) #calculate euclidean distance
+                        self.point_motion.append(dist)
 
                     self.prev_point = (x, y)
 
@@ -317,23 +314,6 @@ class WebcamController:
 
         self.cap_lbl.after(10, self.video_stream)
         
-
-
-    # def cleanup(self):
-    #     try:
-    #         print("Cleaning up resources...")
-    #         self.cap.release()
-    #         self.root.quit()
-    #     except Exception as e:
-    #         print(f"Error performing cleanup: {e}")
-
-    #     if self.total_frames > 0:
-    #         print("\n=== MP + Optical Flow Evaluation ===")
-    #         print(f"Avg FPS : {sum(self.fps_log)/len(self.fps_log):.2f}")
-    #         print(f"TSR (%) : {self.success_frames/self.total_frames*100:.2f}")
-    #         if self.point_motion:
-    #             print(f"Tracking Stability : {sum(self.point_motion)/len(self.point_motion):.2f}")
-
 
     def cleanup(self):
         try:
